@@ -12,18 +12,26 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 COMPATIBLE_MACHINE = "juno"
 
-LINARO_RELEASE = "19.06"
-
-SRC_URI = "http://releases.linaro.org/members/arm/platforms/${LINARO_RELEASE}/juno-latest-oe-uboot.zip;subdir=${UNPACK_DIR} \
-    file://images-r0.txt \
-    file://images-r1.txt \
-    file://images-r2.txt \
+SRC_URI = " \
+    file://mbb_v151.ebf \
+    file://io_b118.bit \
+    file://tapid.arm \
+    file://pms_v103.bin \
+    file://pms_v104.bin \
+    file://pms_v105.bin \
+    file://mb-board.txt \
+    file://site1-HBI0262B-board.txt \
+    file://site1-HBI0262C-board.txt \
+    file://site1-HBI0262D-board.txt \
+    file://site1-images.txt \
+    file://hdlcdclk.dat \
+    file://startup.nsh \
+    file://selftest \
+    file://config.txt \
     file://uEnv.txt \
 "
-SRC_URI[md5sum] = "01b662b81fa409d55ff298238ad24003"
-SRC_URI[sha256sum] = "b8a3909bb3bc4350a8771b863193a3e33b358e2a727624a77c9ecf13516cec82"
 
-UNPACK_DIR = "juno-firmware-${LINARO_RELEASE}"
+FIRMWARE_DIR = "juno-firmware"
 
 inherit deploy nopackages
 
@@ -33,23 +41,63 @@ do_compile[noexec] = "1"
 # The ${D} is used as a temporary directory and we don't generate any
 # packages for this recipe.
 do_install() {
-    cp -a ${WORKDIR}/${UNPACK_DIR} ${D}
-    cp -f ${RECIPE_SYSROOT}/firmware/bl1-juno.bin \
-        ${D}/${UNPACK_DIR}/SOFTWARE/bl1.bin
+    install -d ${D}/${FIRMWARE_DIR}/
+    cp -f ${WORKDIR}/config.txt ${D}/${FIRMWARE_DIR}/
 
-    cp -f ${RECIPE_SYSROOT}/firmware/fip-juno.bin \
-        ${D}/${UNPACK_DIR}/SOFTWARE/fip.bin
+    # Files in the MB directory are mostly the same, except for the PMS file and references to the PMS file by name
+    install -d ${D}/${FIRMWARE_DIR}/MB/HBI0262B/
+    cp -f ${WORKDIR}/mbb_v151.ebf ${D}/${FIRMWARE_DIR}/MB/HBI0262B/
+    cp -f ${WORKDIR}/io_b118.bit ${D}/${FIRMWARE_DIR}/MB/HBI0262B/
+    cp -f ${WORKDIR}/tapid.arm  ${D}/${FIRMWARE_DIR}/MB/HBI0262B/
+    cp -f ${WORKDIR}/pms_v103.bin ${D}/${FIRMWARE_DIR}/MB/HBI0262B/
+    cp -f ${WORKDIR}/mb-board.txt ${D}/${FIRMWARE_DIR}/MB/HBI0262B/board.txt
+
+    install -d ${D}/${FIRMWARE_DIR}/MB/HBI0262C/
+    cp -f ${WORKDIR}/mbb_v151.ebf ${D}/${FIRMWARE_DIR}/MB/HBI0262C/
+    cp -f ${WORKDIR}/io_b118.bit ${D}/${FIRMWARE_DIR}/MB/HBI0262C/
+    cp -f ${WORKDIR}/tapid.arm  ${D}/${FIRMWARE_DIR}/MB/HBI0262C/
+    cp -f ${WORKDIR}/pms_v104.bin ${D}/${FIRMWARE_DIR}/MB/HBI0262C/
+    sed 's/pms_v103/pms_v104/g' ${WORKDIR}/mb-board.txt > ${D}/${FIRMWARE_DIR}/MB/HBI0262C/board.txt
+
+    install -d ${D}/${FIRMWARE_DIR}/MB/HBI0262D/
+    cp -f ${WORKDIR}/mbb_v151.ebf ${D}/${FIRMWARE_DIR}/MB/HBI0262D/
+    cp -f ${WORKDIR}/io_b118.bit ${D}/${FIRMWARE_DIR}/MB/HBI0262D/
+    cp -f ${WORKDIR}/tapid.arm  ${D}/${FIRMWARE_DIR}/MB/HBI0262D/
+    cp -f ${WORKDIR}/pms_v105.bin ${D}/${FIRMWARE_DIR}/MB/HBI0262D/
+    sed 's/pms_v103/pms_v105/g' ${WORKDIR}/mb-board.txt > ${D}/${FIRMWARE_DIR}/MB/HBI0262D/board.txt
+
+    # The SITE1 image files are mostly the same except for the DTB they reference
+    install -d ${D}/${FIRMWARE_DIR}/SITE1/HBI0262B/
+    cp -f ${WORKDIR}/site1-HBI0262B-board.txt ${D}/${FIRMWARE_DIR}/SITE1/HBI0262B/board.txt
+    cp -f ${WORKDIR}/site1-images.txt ${D}/${FIRMWARE_DIR}/SITE1/HBI0262B/images.txt
+
+    install -d ${D}/${FIRMWARE_DIR}/SITE1/HBI0262C/
+    cp -f ${WORKDIR}/site1-HBI0262C-board.txt ${D}/${FIRMWARE_DIR}/SITE1/HBI0262C/board.txt
+    sed 's/juno\.dtb/juno-r1.dtb/g' ${WORKDIR}/site1-images.txt > ${D}/${FIRMWARE_DIR}/SITE1/HBI0262C/images.txt
+
+    install -d ${D}/${FIRMWARE_DIR}/SITE1/HBI0262D/
+    cp -f ${WORKDIR}/site1-HBI0262D-board.txt ${D}/${FIRMWARE_DIR}/SITE1/HBI0262D/board.txt
+    sed 's/juno\.dtb/juno-r2.dtb/g' ${WORKDIR}/site1-images.txt > ${D}/${FIRMWARE_DIR}/SITE1/HBI0262D/images.txt
+
+    # The files in SOFTWARE are listed in the SITE1 board.txt file by name
+    install -d ${D}/${FIRMWARE_DIR}/SOFTWARE/
+    cp -f ${RECIPE_SYSROOT}/firmware/fip.bin \
+        ${D}/${FIRMWARE_DIR}/SOFTWARE/fip.bin
+
+    cp -f ${RECIPE_SYSROOT}/firmware/bl1.bin \
+        ${D}/${FIRMWARE_DIR}/SOFTWARE/bl1.bin
+
+    cp -f ${WORKDIR}/hdlcdclk.dat ${D}/${FIRMWARE_DIR}/SOFTWARE/
 
     cp -f ${RECIPE_SYSROOT}/firmware/scp_romfw_bypass.bin \
-        ${D}/${UNPACK_DIR}/SOFTWARE/scp_bl1.bin
+        ${D}/${FIRMWARE_DIR}/SOFTWARE/scp_bl1.bin
+
+    cp -f ${WORKDIR}/startup.nsh ${D}/${FIRMWARE_DIR}/SOFTWARE/
+    cp -f ${WORKDIR}/selftest ${D}/${FIRMWARE_DIR}/SOFTWARE/
+    dd if=/dev/zero of="${D}/${FIRMWARE_DIR}/SOFTWARE/blank.img" bs=1024 count=192 status=none
 
     # u-boot environment file
-    cp -f ${WORKDIR}/uEnv.txt ${D}/${UNPACK_DIR}/SOFTWARE/
-
-    # Juno images list file
-    cp -f ${WORKDIR}/images-r0.txt ${D}/${UNPACK_DIR}/SITE1/HBI0262B/images.txt
-    cp -f ${WORKDIR}/images-r1.txt ${D}/${UNPACK_DIR}/SITE1/HBI0262C/images.txt
-    cp -f ${WORKDIR}/images-r2.txt ${D}/${UNPACK_DIR}/SITE1/HBI0262D/images.txt
+    cp -f ${WORKDIR}/uEnv.txt ${D}/${FIRMWARE_DIR}/SOFTWARE/
 }
 
 do_deploy() {
@@ -59,18 +107,18 @@ do_deploy() {
     # task.
     for f in ${KERNEL_DEVICETREE}; do
         install -m 755 -c ${DEPLOY_DIR_IMAGE}/$(basename $f) \
-            ${D}/${UNPACK_DIR}/SOFTWARE/.
+            ${D}/${FIRMWARE_DIR}/SOFTWARE/.
     done
 
     if [ "${INITRAMFS_IMAGE_BUNDLE}" -eq 1 ]; then
         cp -L -f ${DEPLOY_DIR_IMAGE}/Image.gz-initramfs-juno.bin \
-            ${D}/${UNPACK_DIR}/SOFTWARE/Image
+            ${D}/${FIRMWARE_DIR}/SOFTWARE/Image
     else
-        cp -L -f ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE} ${D}/${UNPACK_DIR}/SOFTWARE/
+        cp -L -f ${DEPLOY_DIR_IMAGE}/${KERNEL_IMAGETYPE} ${D}/${FIRMWARE_DIR}/SOFTWARE/
     fi
 
     # Compress the files
-    tar -C ${D}/${UNPACK_DIR} -zcvf ${WORKDIR}/${PN}.tar.gz ./
+    tar -C ${D}/${FIRMWARE_DIR} -zcvf ${WORKDIR}/${PN}.tar.gz ./
 
     # Deploy the compressed archive to the deploy folder
     install -D -p -m0644 ${WORKDIR}/${PN}.tar.gz ${DEPLOYDIR}/${PN}.tar.gz
