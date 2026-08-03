@@ -2154,8 +2154,10 @@ and `Arm Development Studio <arm-ds-website_>`__ versions 2022.2, 2022.c, or 202
 
         cd ${WORKSPACE}/secure-debug-manager
         git checkout b30d6496ca749123e86b39b161b9f70ef76106d6
+        git submodule update --init
 
 #. Follow the instructions in the `Secure Debug Manager (PSA-ADAC / SDC-600)'s README <secure-debug-manager-repo-readme_>`__ for the development machine setup.
+   This setup must include building the Secure Debug Manager because the built library completes the Arm Development Studio configuration.
 
 #. Rebuild the software stack with Secure Debug.
 
@@ -2177,9 +2179,34 @@ and `Arm Development Studio <arm-ds-website_>`__ versions 2022.2, 2022.c, or 202
 
 #. Connect the debug probe to the MPS3 using the 20-pin 1.27mm connector with the ``CS_20W_1.27MM silkscreen`` label.
 
-#. Create a debug configuration in Arm Development Studio as described in the `Secure Debug Manager (PSA-ADAC / SDC-600)'s README <secure-debug-manager-armds-integration_>`__.
+#. Open a new Arm Development Studio IDE window and add the Secure Debug Manager configuration database.
 
-#. Connect the debuger to the target using the debug configuration.
+   #. Select ``Window`` > ``Preferences``.
+   #. Expand ``Arm DS`` and select ``Configuration Database``.
+   #. Select ``Add``.
+   #. Enter a descriptive name, such as ``Corstone-1000 Secure Debug``.
+      The name does not affect the connection.
+   #. Set ``Location`` to ``${WORKSPACE}/secure-debug-manager/arm_ds/DB``.
+   #. Select ``OK`` to close the ``Add configuration database location`` dialog.
+   #. Select ``Rebuild database``.
+   #. Select ``Apply and Close``.
+
+#. Create the Arm Development Studio hardware connection.
+
+   #. Select ``Create a debug connection...``.
+   #. Select ``Hardware Connection``, then select ``Next``.
+   #. Enter a descriptive debug connection name, then select ``Next``.
+      The name does not affect the connection.
+   #. In ``Target Selection``, select ``MPS3_Corstone-1000_ADAC``.
+   #. Select ``Finish``.
+
+#. Configure and start the debug connection.
+
+   #. Select ``Arm`` > ``MPS3_Corstone-1000_ADAC`` > ``Bare Metal Debug`` > ``Cortex-A35``.
+   #. For ``Target Connection``, select ``ULINKpro``.
+   #. Select ``Browse...``.
+   #. In the ``Connection Browser``, select the name of the connected ULINKpro probe, then select ``Select``.
+   #. Select ``Debug``.
 
 #. Provide the paths to the private key and trust chain certificate when asked by Arm Development Studio Console.
 
