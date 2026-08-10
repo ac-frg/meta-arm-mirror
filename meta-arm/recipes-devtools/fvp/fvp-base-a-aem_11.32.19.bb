@@ -21,8 +21,6 @@ UPSTREAM_VERSION_UNKNOWN = "1"
 MODEL_CODE = "FVP_Base_RevC_AEMvA"
 SHELL_SCRIPT_NAME = "${MODEL_CODE}_11.32_19_${FVP_ARCH}.sh"
 
-COMPATIBLE_HOST = "(aarch64|x86_64).*-linux"
-
 INSANE_SKIP:${PN} += "dev-so"
 
 do_install() {

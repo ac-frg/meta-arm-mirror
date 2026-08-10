@@ -15,7 +15,7 @@ Please refer to 'https://developer.arm.com/downloads/-/arm-ecosystem-fvps/eula'\
 ${@bb.utils.contains('BB_ENV_PASSTHROUGH_ADDITIONS', 'ARM_FVP_EULA_ACCEPT', ' and export ARM_FVP_EULA_ACCEPT to 1', '', d)}.\
 "
 
-COMPATIBLE_HOST = "x86_64.*-linux"
+COMPATIBLE_HOST = "(aarch64|x86_64).*-linux"
 
 # The architecture-specific download filename suffix
 FVP_ARCH:aarch64 = "Linux64_armv8l"
